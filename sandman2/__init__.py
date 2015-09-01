@@ -88,6 +88,8 @@ def register_service(cls, primary_key_type='int'):
     """
     view_func = cls.as_view(cls.__name__.lower())  # pylint: disable=no-member
     methods = set(cls.__model__.__methods__)  # pylint: disable=no-member
+    current_app.__services__ = getattr(current_app, '__services__', set())
+    current_app.__services__.add(cls)
 
     if 'GET' in methods:  # pylint: disable=no-member
         current_app.add_url_rule(
