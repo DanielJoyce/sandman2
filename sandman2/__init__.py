@@ -90,22 +90,30 @@ def register_service(cls, primary_key_type='int'):
     methods = set(cls.__model__.__methods__)  # pylint: disable=no-member
     current_app.__services__ = getattr(current_app, '__services__', set())
     current_app.__services__.add(cls)
+    model = cls.__model__
+
+    inst = model()
+
+    if(isinstance(inst.__mapper__.columns[inst.primary_key()].type, db.String)):
+        primary_key_type = "string"
+    else:
+        primary_key_type = "int"
 
     if 'GET' in methods:  # pylint: disable=no-member
         current_app.add_url_rule(
-            cls.__model__.__url__, defaults={'resource_id': None},
+            model.__url__, defaults={'resource_id': None},
             view_func=view_func,
             methods=['GET'])
         current_app.add_url_rule(
-            '{resource}/meta'.format(resource=cls.__model__.__url__),
+            '{resource}/meta'.format(resource=model.__url__),
             view_func=view_func,
             methods=['GET'])
     if 'POST' in methods:  # pylint: disable=no-member
         current_app.add_url_rule(
-            cls.__model__.__url__, view_func=view_func, methods=['POST', ])
+            model.__url__, view_func=view_func, methods=['POST', ])
     current_app.add_url_rule(
         '{resource}/<{pk_type}:{pk}>'.format(
-            resource=cls.__model__.__url__,
+            resource=model.__url__,
             pk='resource_id', pk_type=primary_key_type),
         view_func=view_func,
         methods=methods - set(['POST']))
