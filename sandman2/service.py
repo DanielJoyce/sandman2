@@ -13,7 +13,7 @@ from sandman2.decorators import etag, validate_fields
 from sandman2 import utils, operators
 
 
-RESERVED_PARAMETERS = ['page', 'sort']
+RESERVED_PARAMETERS = ['page', 'sort', 'per_page']
 
 
 def add_link_headers(response, links):
@@ -47,12 +47,16 @@ def order_query(model, query, params):
     ])
 
 
-def get_page(query, page):
+def get_page(query, page, per_page):
     try:
         page = int(page)
     except (TypeError, ValueError):
         raise BadRequestException('Invalid page: "{0}"'.format(page))
-    return query.paginate(page)
+    try:
+        per_page = int(per_page)
+    except (TypeError, ValueError):
+        raise BadRequestException('Invalid per_page: "{0}"'.format(per_page))
+    return query.paginate(page, per_page)
 
 
 def format_pagination(page):
@@ -242,7 +246,7 @@ class Service(MethodView):
         query = self.__model__.query
         query = filter_query(self.__model__, query, request.args)
         query = order_query(self.__model__, query, request.args)
-        return get_page(query, request.args.get('page', 1))
+        return get_page(query, request.args.get('page', 1), request.args.get('per_page', 20))
 
     @staticmethod
     def _no_content_response():
