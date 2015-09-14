@@ -79,7 +79,7 @@ def _register_error_handlers(app):
         return response
 
 
-def register_service(cls, primary_key_type='int'):
+def register_service(cls, primary_key_type=None):
     """Register an API service endpoint.
 
     :param cls: The class to register
@@ -94,10 +94,11 @@ def register_service(cls, primary_key_type='int'):
 
     inst = model()
 
-    if(isinstance(inst.__mapper__.columns[inst.primary_key()].type, db.String)):
-        primary_key_type = "string"
-    else:
-        primary_key_type = "int"
+    if primary_key_type is None:
+        if isinstance(inst.__mapper__.columns[inst.primary_key()].type, db.String):
+            primary_key_type = "string"
+        else:
+            primary_key_type = "int"
 
     if 'GET' in methods:  # pylint: disable=no-member
         current_app.add_url_rule(
